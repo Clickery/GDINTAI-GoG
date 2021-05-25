@@ -10,15 +10,16 @@ public class BoardManager : MonoBehaviour
     private float tileSizeX = 1.4f;
     private float tileSizeY = 1.0f;
 
+    //tells if the board at x,y is occupied by a piece
     private bool[,] isOccupied;
 
+    //reference to tiles, for position purposes
     GameObject[,] tiles;
 
 
-    //pieces
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         this.tiles = new GameObject[this.cols, this.rows];
         GenerateBoard();
@@ -57,8 +58,11 @@ public class BoardManager : MonoBehaviour
                 float posX = j * this.tileSizeX;
                 float posY = i * this.tileSizeY;
                 this.tiles[j, i].transform.position = new Vector2(posX, posY);
-                
-                
+
+                this.tiles[j, i].GetComponent<TileData>().x = j;
+                this.tiles[j, i].GetComponent<TileData>().y = i;
+
+
                 if (this.tiles[j, i] == null)
                 {
                     Debug.LogError("Script: BoardManager, this.tiles[" + j + ", " + i + "] is NULL");
