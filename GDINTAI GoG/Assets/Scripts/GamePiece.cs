@@ -6,18 +6,21 @@ public class GamePiece : MonoBehaviour
 {
     //References
     public GameObject controller;
-    public GameObject movePlate;
 
     //Positions
-    private int xCoord = -1;
-    private int yCoord = -1;
+    private int xCoord;
+    private int yCoord;
 
-    private bool isAlive = true;
+    private bool isAlive;
 
-    private int point = 0;
+
+    private int point;
 
     //Enemy or Player
     private string owner;
+
+
+    private string pieceName;
 
     //Sprite References
     public Sprite enemy_5star, enemy_4star, enemy_3star, enemy_2star, enemy_1star, enemy_Colonel,
@@ -65,6 +68,13 @@ public class GamePiece : MonoBehaviour
             case "player_Private": this.GetComponent<SpriteRenderer>().sprite = this.player_Private; this.point = 2; break;
             case "player_Flag": this.GetComponent<SpriteRenderer>().sprite = this.player_Flag; this.point = 1; break;
         }
+
+        this.pieceName = this.name;
+
+        this.xCoord = -1;
+        this.yCoord = -1;
+
+        this.isAlive = true;
    }
 
 
@@ -74,9 +84,9 @@ public class GamePiece : MonoBehaviour
         this.yCoord = y;
    }
 
-    public Vector2 GetCoords()
+    public Vector2Int GetCoords()
     {
-        return new Vector2(this.xCoord, this.yCoord);
+        return new Vector2Int(this.xCoord, this.yCoord);
     }
 
     public void SetOwner(string name)
@@ -89,10 +99,9 @@ public class GamePiece : MonoBehaviour
         return this.owner;
     }
 
-
     public string GetName()
     {
-        return this.name;
+        return this.pieceName;
     }
 
     public void GetKilled()
@@ -112,4 +121,57 @@ public class GamePiece : MonoBehaviour
         return this.point;
     }
 
+    public void SetName(string name)
+    {
+        this.pieceName = name;
+    }
+
+    public void SetPoint(int value)
+    {
+        this.point = value;
+    }
+
+
+    public void SetLifeStatus(bool lifeStatus)
+    {
+        this.isAlive = lifeStatus;
+    }
+
+
+    public void EmptySprites()
+    {
+        this.player_5star = null;
+        this.player_4star = null;
+        this.player_3star = null;
+        this.player_2star = null;
+        this.player_1star = null;
+        this.player_Colonel = null;
+        this.player_Lieutentant_Colonel = null;
+        this.player_Major = null;
+        this.player_Captain = null;
+        this.player_1st_Lieutenant = null;
+        this.player_2nd_Lieutenant = null;
+        this.player_Sergeant = null;
+        this.player_Spy = null;
+        this.player_Private = null;
+        this.player_Flag = null;
+
+        this.enemy_5star = null;
+        this.enemy_4star = null;
+        this.enemy_3star = null;
+        this.enemy_2star = null;
+        this.enemy_1star = null;
+        this.enemy_Colonel = null;
+        this.enemy_Lieutentant_Colonel = null;
+        this.enemy_Major = null;
+        this.enemy_Captain = null;
+        this.enemy_1st_Lieutenant = null;
+        this.enemy_2nd_Lieutenant = null;
+        this.enemy_Sergeant = null;
+        this.enemy_Spy = null;
+        this.enemy_Private = null;
+        this.enemy_Flag = null;
+
+        this.controller = null;
+    }
 }

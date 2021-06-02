@@ -76,6 +76,8 @@ public class DragDrop : MonoBehaviour
 
             if(gp.GetOwner() == "Player")
                 isBeingHeld = true;
+
+            //Debug.Log("clicked!, x: " + (int)gp.GetCoords().x + ", y: " + (int)gp.GetCoords().y);
         }
     }
 
@@ -105,9 +107,8 @@ public class DragDrop : MonoBehaviour
                     //set previous pos to false if it has been placed before
                     if ((int)gp.GetCoords().x != -1 && (int)gp.GetCoords().y != -1)
                     {
-                        //Debug.Log("previously placed!");
+                        Debug.Log("previously placed!, x: " + (int)gp.GetCoords().x + ", y: " + (int)gp.GetCoords().y);
                         this.boardRef.SetTileOccupation((int)gp.GetCoords().x, (int)gp.GetCoords().y, false);
-
                     }
 
                     //set coordinates

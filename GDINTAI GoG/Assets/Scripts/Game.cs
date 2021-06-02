@@ -9,8 +9,8 @@ public class Game : MonoBehaviour
     public GameObject gamePiece;
     
     private BoardManager boardRef;
-    private GameObject[] enemy = new GameObject[21];
-    private GameObject[] player = new GameObject[21];
+    public GameObject[] enemy = new GameObject[21];
+    public GameObject[] player = new GameObject[21];
 
     // Start is called before the first frame update
     void Start()
@@ -37,6 +37,7 @@ public class Game : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+       
         if(PersistentData.instance.GetState() == PersistentData.GameState.Versus)
         {
             if (!this.player[20].GetComponent<GamePiece>().IsPieceAlive())//check if player flag is dead

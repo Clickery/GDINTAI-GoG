@@ -79,7 +79,7 @@ public class PlayerController : MonoBehaviour
             if (hits2d.Length > 1) //occupied space
             {
                 GameObject piece = null;
-                GamePiece gp =null;
+                GamePiece gp = null;
                 for(int i = 0; i < hits2d.Length; i++)
                 {
                     if(hits2d[i].transform.gameObject.GetComponent<GamePiece>() != null)
@@ -111,7 +111,7 @@ public class PlayerController : MonoBehaviour
                 if (gp.GetOwner() == "Enemy" && xMove != -1 && yMove != -1)//arbiter
                 {
 
-                    Debug.Log("Player point:" + clickedGP.GetPoint() + ", Enemy point: " + gp.GetPoint());
+                    //Debug.Log("Player point:" + clickedGP.GetPoint() + ", Enemy point: " + gp.GetPoint());
 
  
                     //arbiter
@@ -170,10 +170,12 @@ public class PlayerController : MonoBehaviour
 
                     
 
-
                     //reset color
                     this.clickedPiece.transform.GetComponent<Renderer>().material.color = new Color(1.0f, 1.0f, 1.0f);
                     this.clickedPiece = null;
+
+
+                    PersistentData.instance.SetTurn("Enemy");
                 }
             }
             else if(hits2d.Length == 1)//empty space
@@ -203,9 +205,11 @@ public class PlayerController : MonoBehaviour
 
                     //reset color
                     this.clickedPiece.transform.GetComponent<Renderer>().material.color = new Color(1.0f, 1.0f, 1.0f);
+                    //Debug.Log(clickedGP.GetCoords());
                     this.clickedPiece = null;
 
-                    //PersistentData.instance.SetTurn("Enemy");
+                    PersistentData.instance.SetTurn("Enemy");
+                    
                 }
             }
         }

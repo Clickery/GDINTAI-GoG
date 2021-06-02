@@ -16,7 +16,6 @@ public class PersistentData : MonoBehaviour
 
     private string turn;
 
-
     private void Awake()
     {
         if (instance != null)
