@@ -44,8 +44,8 @@ public class Game : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-       
-        if(PersistentData.instance.GetState() == PersistentData.GameState.Versus)
+
+        if (PersistentData.instance.GetState() == PersistentData.GameState.Versus)
         {
             if (!this.player[20].GetComponent<GamePiece>().IsPieceAlive())//check if player flag is dead
             {
