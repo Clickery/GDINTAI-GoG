@@ -38,7 +38,7 @@ public class PersistentData : MonoBehaviour
 
         this.turn = "Player";
 
-        DontDestroyOnLoad(this.gameObject);
+        
     }
 
 
