@@ -56,27 +56,15 @@ public class AIController : MonoBehaviour
         this.GetAiPossibleMoves(deepCopy, moveList);
 
 
-        int randomMove = 0;
+        
         if (moveList.Count > 0)
         {
-            randomMove = Random.Range(0, moveList.Count - 1);
-            //Debug.Log("moveList size: " + moveList.Count);
-            //Debug.Log(randomMove);
-            //Debug.Log(moveList[randomMove].Key.GetName() + ", " + moveList[randomMove].Value);
+            int aiMoveIndex = 0;
+            aiMoveIndex = Random.Range(0, moveList.Count - 1);
 
+            this.EvaluateBoard(deepCopy, moveList, aiMoveIndex);
+            this.MovePiece(moveList[aiMoveIndex].Key, moveList[aiMoveIndex].Value);
 
-            this.EvaluateBoard(deepCopy, moveList);
-            this.MovePiece(moveList[randomMove].Key, moveList[randomMove].Value);
-
-
-
-            //to debug available moves
-            /*for (int i = 0; i < moveList.Count; i++)
-            {
-                Debug.Log("name " + moveList[i].Key.GetName() + ", move to " + moveList[i].Value + ", life status: " + moveList[i].Key.IsPieceAlive());
-                
-            }
-            Debug.Log("////////////////////////////////////////////////////////////////////////");*/
         }
         else
         {
@@ -92,18 +80,17 @@ public class AIController : MonoBehaviour
     }
 
     //Monte Carlo Search
-    private void EvaluateBoard(GamePiece[] deepCopy, List<KeyValuePair<GamePiece, Vector2Int>> moveList)
+    private void EvaluateBoard(GamePiece[] deepCopy, List<KeyValuePair<GamePiece, Vector2Int>> moveList, int finalMoveIndex)
     {
-        int highestScore = 0;
-        int offense_coeff = 1;
+        int[] scoreTally = new int[moveList.Count];
+        int offense_coeff = 6;
         int open_coeff = 2;
         int defense_coeff = 3;
         int flagSafety_coeff = 4;
         GamePiece[] tempCopy = new GamePiece[42];
 
-
         //evaluate board on all possible moves
-        for (int i = moveList.Count - 1; i < moveList.Count; i++)
+        for (int i = 0; i < moveList.Count; i++)
         {
             Debug.Log("EVALUATE!");
             int score = 5;
@@ -137,11 +124,17 @@ public class AIController : MonoBehaviour
             }
 
             //calculate offense
-            score += this.CalculateOffense(tempCopy);
-            
+            score += this.CalculateOffense(tempCopy, offense_coeff);
             //calculate Openness
-
+            score += this.CalculateOpen(tempCopy, open_coeff);
             //calculate Defense
+            score += this.CalculateDefense(tempCopy, defense_coeff);
+            //calculate Flag Safety
+            score += this.CalculateFlagSafety(tempCopy);
+
+            //tally
+            
+            scoreTally[i] = score;
 
             //clean garbage
             for (int j = 0; j < 42; j++)
@@ -150,28 +143,173 @@ public class AIController : MonoBehaviour
             }
         }
 
+        
+
+        int tempScore = -99999;
+        for(int i = 0; i < scoreTally.Length; i++)
+        {
+            if (scoreTally[i] > tempScore)
+            {
+                finalMoveIndex = i;
+                tempScore = scoreTally[i];
+            }
+                
+        }
+        Debug.Log(tempScore);
+
     }
 
-    private int CalculateOffense(GamePiece[] deepCopy)
+    private int CalculateOffense(GamePiece[] deepCopy, int offense_Coeff)
     {
         int score = 0;
 
-        //check how many playerpiece are alive
         for(int i = 0; i < 42; i++)
         {
             //count dead enemies add points
             if(!deepCopy[i].IsPieceAlive() && deepCopy[i].GetOwner() == "Player")
             {
-                score++;
+                score += 50 * offense_Coeff;
             }
 
-            //if(deepCopy)
+            //score based on how close ai pieces to player zone
+            if (deepCopy[i].IsPieceAlive() && deepCopy[i].GetOwner() == "Enemy")
+            {
+                score += (Mathf.Abs(deepCopy[i].GetCoords().y - 7) + 5) * offense_Coeff;
+            }
 
+        }
+
+        for (int i = 0; i < 21; i++)
+        {
+            int x = deepCopy[i].GetCoords().x;
+            int y = deepCopy[i].GetCoords().y;
+            //check if up is valid
+            if (deepCopy[i].IsPieceAlive() && (y + 1 < 8) && this.CheckForAllyPiece(deepCopy, new Vector2Int(x, y + 1), "Player"))
+            {
+                score += 1 * offense_Coeff;
+            }
+            //check if left is valid
+            if (deepCopy[i].IsPieceAlive() && (x - 1 > -1) && this.CheckForAllyPiece(deepCopy, new Vector2Int(x - 1, y), "Player"))
+            {
+                score += 1 * offense_Coeff;
+            }
+            //check if right is valid
+            if (deepCopy[i].IsPieceAlive() && (x + 1 < 9) && this.CheckForAllyPiece(deepCopy, new Vector2Int(x + 1, y), "Player"))
+            {
+                score += 1 * offense_Coeff;
+            }
+            //check if down is valid
+            if (deepCopy[i].IsPieceAlive() && (y - 1 > -1) && this.CheckForAllyPiece(deepCopy, new Vector2Int(x, y - 1), "Player"))
+            {
+                score += 1 * offense_Coeff;
+                
+            }
         }
 
         return score;
     }
 
+    private int CalculateOpen(GamePiece[] deepCopy, int open_Coeff)
+    {
+        int score = 0;
+
+        for (int i = 0; i < 21; i++)
+        {
+            int x = deepCopy[i].GetCoords().x;
+            int y = deepCopy[i].GetCoords().y;
+            //check if up is valid
+            if (deepCopy[i].IsPieceAlive() && (y + 1 < 8) && !this.CheckForAllyPiece(deepCopy, new Vector2Int(x, y + 1), "Enemy"))
+            {
+                score += 1 * open_Coeff;
+            }
+            //check if left is valid
+            if (deepCopy[i].IsPieceAlive() && (x - 1 > -1) && !this.CheckForAllyPiece(deepCopy, new Vector2Int(x - 1, y), "Enemy"))
+            {
+                score += 1 * open_Coeff;
+            }
+            //check if right is valid
+            if (deepCopy[i].IsPieceAlive() && (x + 1 < 9) && !this.CheckForAllyPiece(deepCopy, new Vector2Int(x + 1, y), "Enemy"))
+            {
+                score += 1 * open_Coeff;
+            }
+            //check if down is valid
+            if (deepCopy[i].IsPieceAlive() && (y - 1 > -1) && !this.CheckForAllyPiece(deepCopy, new Vector2Int(x, y - 1), "Enemy"))
+            {
+                score += 1 * open_Coeff;
+            }
+        }
+
+        return score;
+    }
+
+    private int CalculateDefense(GamePiece[] deepCopy, int defense_Coeff)
+    {
+        int score = 0;
+
+        for (int i = 21; i < 42; i++)
+        {
+            int x = deepCopy[i].GetCoords().x;
+            int y = deepCopy[i].GetCoords().y;
+            //check if up is valid
+            if (deepCopy[i].IsPieceAlive() && (y + 1 < 8) && this.CheckForAllyPiece(deepCopy, new Vector2Int(x, y + 1), "Enemy"))
+            {
+                score += 1 * defense_Coeff;
+            }
+            //check if left is valid
+            if (deepCopy[i].IsPieceAlive() && (x - 1 > -1) && this.CheckForAllyPiece(deepCopy, new Vector2Int(x - 1, y), "Enemy"))
+            {
+                score += 1 * defense_Coeff;
+            }
+            //check if right is valid
+            if (deepCopy[i].IsPieceAlive() && (x + 1 < 9) && this.CheckForAllyPiece(deepCopy, new Vector2Int(x + 1, y), "Enemy"))
+            {
+                score += 1 * defense_Coeff;
+            }
+            //check if down is valid
+            if (deepCopy[i].IsPieceAlive() && (y - 1 > -1) && this.CheckForAllyPiece(deepCopy, new Vector2Int(x, y - 1), "Enemy"))
+            {
+                score += 1 * defense_Coeff;
+
+            }
+        }
+        return score;
+    }
+
+    private int CalculateFlagSafety(GamePiece[] deepCopy)
+    {
+        int score = 0;
+
+        
+        int x = deepCopy[20].GetCoords().x;
+        int y = deepCopy[20].GetCoords().y;
+
+        for(int i = 0; i < 2; i++)
+        {
+            //check if up is valid
+            if (deepCopy[20].IsPieceAlive() && (y + (i + 1) < 8) && this.CheckForAllyPiece(deepCopy, new Vector2Int(x, y + (i + 1)), "Player"))
+            {
+                score -= 900 - (i * 250);
+            }
+            //check if left is valid
+            if (deepCopy[20].IsPieceAlive() && (x - (i + 1) > -1) && this.CheckForAllyPiece(deepCopy, new Vector2Int(x - (i + 1), y), "Player"))
+            {
+                score -= 900 - (i * 250);
+            }
+            //check if right is valid
+            if (deepCopy[20].IsPieceAlive() && (x + (i + 1) < 9) && this.CheckForAllyPiece(deepCopy, new Vector2Int(x + (i + 1), y), "Player"))
+            {
+                score -= 900 - (i * 250);
+            }
+            //check if down is valid
+            if (deepCopy[20].IsPieceAlive() && (y - (i + 1) > -1) && this.CheckForAllyPiece(deepCopy, new Vector2Int(x, y - (i + 1)), "Player"))
+            {
+                score -= 900 - (i * 250);
+            }
+        }
+
+
+        return score;
+    }
 
     private void MoveEvaluatingPiece(GamePiece pieceToMove, Vector2Int moveCoord, GamePiece[] opposingPieces , GamePiece[] aiPieces)
     {
@@ -197,7 +335,12 @@ public class AIController : MonoBehaviour
         //if battle move
         if (isFound)
         {
-            int playerAliveCount = 0;
+            if (pieceToMove.GetPoint() > 10)
+                playerPiece.GetKilled();
+            else
+                pieceToMove.GetKilled();
+
+            /*int playerAliveCount = 0;
             int aiAliveCount = 0;
             for(int i = 0; i < 42; i++)
             {
@@ -211,10 +354,12 @@ public class AIController : MonoBehaviour
             if (playerAliveCount < aiAliveCount || playerAliveCount == aiAliveCount)
                 pieceToMove.GetKilled();
             else
-                playerPiece.GetKilled();
+                pieceToMove.GetKilled();*/
 
         }
     }
+
+    
 
     private void MovePiece(GamePiece pieceToMove, Vector2Int moveCoord)
     {
@@ -303,25 +448,25 @@ public class AIController : MonoBehaviour
             int y = gp.GetCoords().y;
             string name = deepCopy[i].GetName();
             //check if up is valid
-            if (gp.IsPieceAlive() && (y + 1 < 8) && !this.CheckForAllyPiece(deepCopy, new Vector2Int(x, y + 1)))
+            if (gp.IsPieceAlive() && (y + 1 < 8) && !this.CheckForAllyPiece(deepCopy, new Vector2Int(x, y + 1), "Enemy"))
             {
                 tempMoveStack.Push(new KeyValuePair<GamePiece, Vector2Int>(deepCopy[i], new Vector2Int(x, y + 1)));
                 //Debug.Log(name + " UP: " + !this.CheckForAllyPiece(deepCopy, new Vector2Int(x, y + 1)));
             }
             //check if left is valid
-            if (gp.IsPieceAlive() && (x - 1 > -1) && !this.CheckForAllyPiece(deepCopy, new Vector2Int(x - 1, y)))
+            if (gp.IsPieceAlive() && (x - 1 > -1) && !this.CheckForAllyPiece(deepCopy, new Vector2Int(x - 1, y), "Enemy"))
             {
                 tempMoveStack.Push(new KeyValuePair<GamePiece, Vector2Int>(deepCopy[i], new Vector2Int(x - 1, y)));
                 //Debug.Log(name + " LEFT: " + !this.CheckForAllyPiece(deepCopy, new Vector2Int(x - 1, y)));
             }
             //check if right is valid
-            if (gp.IsPieceAlive() && (x + 1 < 9) && !this.CheckForAllyPiece(deepCopy, new Vector2Int(x + 1, y)))
+            if (gp.IsPieceAlive() && (x + 1 < 9) && !this.CheckForAllyPiece(deepCopy, new Vector2Int(x + 1, y), "Enemy"))
             {
-                tempMoveStack.Push(new KeyValuePair<GamePiece, Vector2Int>(deepCopy[i], new Vector2Int(x + 1, y)));
+                tempMoveStack.Push(new KeyValuePair<GamePiece, Vector2Int>(deepCopy[i], new Vector2Int(x + 1, y) ));
                 //Debug.Log(name + " RIGHT: " + !this.CheckForAllyPiece(deepCopy, new Vector2Int(x + 1, y)));
             }
             //check if down is valid
-            if (gp.IsPieceAlive() && (y - 1 > -1) && !this.CheckForAllyPiece(deepCopy, new Vector2Int(x, y - 1)))
+            if (gp.IsPieceAlive() && (y - 1 > -1) && !this.CheckForAllyPiece(deepCopy, new Vector2Int(x, y - 1), "Enemy"))
             {
                 tempMoveStack.Push(new KeyValuePair<GamePiece, Vector2Int>(deepCopy[i], new Vector2Int(x, y - 1)));
                 //Debug.Log(name + " DOWN: " + !this.CheckForAllyPiece(deepCopy, new Vector2Int(x, y - 1)));
@@ -337,20 +482,40 @@ public class AIController : MonoBehaviour
     }
 
     //check if "ally" pieces is in said coordinates in reference of a gamepiece
-    private bool CheckForAllyPiece(GamePiece[] deepCopy, Vector2Int coord)
+    private bool CheckForAllyPiece(GamePiece[] deepCopy, Vector2Int coord, string whatToSearch)
     {
         bool isFound = false;
-        for(int i = 0; i < 21; i++)
+        int startingNum = 0;
+        int maxNum = 0;
+
+        if(whatToSearch == "Player")
+        {
+            startingNum = 21;
+            maxNum = 42;
+        }
+        else if(whatToSearch == "Enemy")
+        {
+            startingNum = 0;
+            maxNum = 21;
+        }
+        else if(whatToSearch == "Everyone")
+        {
+            startingNum = 0;
+            maxNum = 42;
+        }
+
+
+        for(int i = startingNum; i < maxNum; i++)
         {
             if(deepCopy[i].GetCoords() == coord)
             {
-                isFound = true;  
+                isFound = true;
+                break;
             }
         }
 
         return isFound;
     }
-
 
     private void DeepCopyParentNode(GamePiece[] deepCopy)//optimization purposes
     {

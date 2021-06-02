@@ -5,6 +5,13 @@ using UnityEngine.SceneManagement;
 
 public class Game : MonoBehaviour
 {
+    public GameObject winnerText;
+    public GameObject mainMenuButton;
+    public GameObject gameOverText;
+
+
+
+
     //Spawn piece
     public GameObject gamePiece;
     
@@ -29,7 +36,7 @@ public class Game : MonoBehaviour
         this.SetEnemyPieces();
 
         //Hide
-        //this.HideEnemyPieces();
+        this.HideEnemyPieces();
 
     }
 
@@ -153,7 +160,9 @@ public class Game : MonoBehaviour
         }
         else if(PersistentData.instance.GetState() == PersistentData.GameState.GameOver)
         {
-            SceneManager.LoadScene(2);
+            this.gameOverText.SetActive(true);
+            this.winnerText.SetActive(true);
+            this.mainMenuButton.SetActive(true);
         }
     }
   
@@ -297,7 +306,7 @@ public class Game : MonoBehaviour
         }
     }
 
-    private void HideEnemyPieces()
+    public void HideEnemyPieces()
     {
         Color color = new Color(0,0,0);
         for(int i = 0; i < 21; i++)
@@ -307,7 +316,7 @@ public class Game : MonoBehaviour
  
     }
 
-    private void ShowEnemyPieces()
+    public void ShowEnemyPieces()
     {
         Color color = new Color(1, 1, 1);
         for (int i = 0; i < 21; i++)

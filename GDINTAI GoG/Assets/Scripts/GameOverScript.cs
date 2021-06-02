@@ -9,11 +9,17 @@ public class GameOverScript : MonoBehaviour
 
     private void Start()
     {
+        
+    }
+
+    private void Update()
+    {
         GameObject temp = GameObject.FindGameObjectWithTag("WinnerText");
         this.winnerText = temp.GetComponent<Text>();
         this.winnerText.text = PersistentData.instance.GetWinner() + " Wins";
         Destroy(PersistentData.instance.gameObject);
     }
+
 
     public void MainMenu()
     {
